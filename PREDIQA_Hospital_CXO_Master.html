@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PREDIQA — Hospital CXO Master · Architecture, Loop & Governance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0b1422; --ink2:#2a3344; --ink3:#5e6678; --ink4:#8b92a3;
+  --paper:#f7f8fc; --paper2:#eef1f7; --line:#dce0ea; --line2:#e8ebf2;
+  --white:#ffffff;
+  --cofler:#0f6e56; --cofler-l:#e1f5ee;
+  --flip:#1a56db;   --flip-l:#e8effd;
+  --empath:#7c3aed; --empath-l:#f1ecfe;
+  --fraud:#c0392b;  --fraud-l:#fbeae8;
+  --gold:#b7860a;   --gold-l:#fcf3dd;
+  --navy:#0b1422; --navy2:#101d31; --navy3:#16263f;
+  --maxw:1180px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.mono{font-family:'IBM Plex Mono',monospace}
+.serif{font-family:'Fraunces',serif}
+
+/* SIDE NAV LAYOUT */
+.shell{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+.sidenav{
+  position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+  background:var(--navy);color:#fff;padding:24px 18px;
+  border-right:1px solid rgba(255,255,255,.08);
+}
+.sn-brand{display:flex;align-items:center;gap:11px;margin-bottom:26px;text-decoration:none;color:#fff}
+.sn-mark{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,var(--cofler),var(--flip));font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;box-shadow:0 2px 12px rgba(26,86,219,.45)}
+.sn-brand b{font-weight:600;letter-spacing:.05em;font-size:16px;display:block}
+.sn-brand span{font-size:9.5px;color:#8b92a3;font-family:'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase}
+.sn-group{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#5e6678;margin:22px 0 8px;padding-left:10px}
+.sn-link{display:flex;align-items:center;gap:10px;color:#aeb6c6;text-decoration:none;font-size:13px;font-weight:500;padding:8px 10px;border-radius:8px;transition:.16s;margin-bottom:2px}
+.sn-link:hover{color:#fff;background:rgba(255,255,255,.07)}
+.sn-link.active{color:#fff;background:rgba(123,220,192,.12)}
+.sn-link .dot{width:7px;height:7px;border-radius:2px;flex:none}
+.main{min-width:0}
+.menu-btn{display:none}
+@media(max-width:880px){
+  .shell{grid-template-columns:1fr}
+  .sidenav{position:fixed;z-index:200;width:248px;transform:translateX(-100%);transition:.25s}
+  .sidenav.open{transform:none}
+  .menu-btn{display:flex;position:fixed;top:14px;left:14px;z-index:210;width:42px;height:42px;border-radius:10px;background:var(--navy);color:#fff;border:none;align-items:center;justify-content:center;font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+}
+
+/* HERO */
+.cxo-hero{
+  background:
+    radial-gradient(900px 460px at 85% -10%, rgba(15,110,86,.22), transparent 60%),
+    radial-gradient(800px 440px at 5% 8%, rgba(26,86,219,.18), transparent 58%),
+    var(--navy);
+  color:#fff;padding:64px clamp(20px,5vw,64px) 56px;position:relative;overflow:hidden;
+}
+.cxo-hero .grid-bg{position:absolute;inset:0;opacity:.4;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse 75% 70% at 40% 20%,#000,transparent)}
+.cxo-hero .inner{position:relative;max-width:920px}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#9aa3b5;border:1px solid rgba(255,255,255,.16);border-radius:100px;padding:6px 14px;margin-bottom:24px}
+.eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:#3dd7a8;animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(61,215,168,.55)}70%{box-shadow:0 0 0 8px rgba(61,215,168,0)}100%{box-shadow:0 0 0 0 rgba(61,215,168,0)}}
+.cxo-hero h1{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(28px,4.6vw,48px);line-height:1.08;letter-spacing:-.015em;margin-bottom:18px;max-width:20ch}
+.cxo-hero h1 em{font-style:italic;color:#7bdcc0}
+.cxo-hero p{font-size:clamp(14px,1.7vw,17px);color:#c2c9d6;max-width:60ch;font-weight:300;line-height:1.62}
+.cxo-hero p b{color:#fff;font-weight:600}
+.hero-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.meta-chip{font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:7px 13px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);color:#dfe4ec}
+
+/* CONTENT */
+.content{padding:clamp(40px,5vw,68px) clamp(20px,5vw,64px)}
+.block{max-width:980px;margin:0 auto 72px}
+.block:last-child{margin-bottom:0}
+.b-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink4);display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.b-eyebrow::before{content:"";width:24px;height:1px;background:var(--ink3)}
+.b-title{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(23px,3.2vw,34px);line-height:1.12;letter-spacing:-.012em;margin-bottom:14px}
+.b-title em{font-style:italic}
+.b-lead{font-size:15.5px;color:var(--ink2);line-height:1.64;max-width:68ch;font-weight:300}
+.b-lead b{font-weight:600;color:var(--ink)}
+
+/* loop pipeline */
+.loop{display:flex;flex-direction:column;gap:0;margin-top:34px;counter-reset:stage}
+.loop-stage{
+  display:grid;grid-template-columns:54px 1fr;gap:18px;position:relative;padding-bottom:26px;
+}
+.loop-stage:not(:last-child)::after{content:"";position:absolute;left:26px;top:54px;bottom:0;width:2px;background:linear-gradient(var(--line),var(--line))}
+.ls-num{width:54px;height:54px;border-radius:13px;display:grid;place-items:center;color:#fff;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:18px;z-index:1;box-shadow:0 4px 14px -4px rgba(0,0,0,.3)}
+.ls-body{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.ls-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:9px}
+.ls-name{font-weight:600;font-size:16.5px}
+.ls-sys{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;padding:4px 9px;border-radius:6px;text-transform:uppercase;font-weight:600}
+.ls-sys.system{background:var(--paper2);color:var(--ink3)}
+.ls-sys.gate{background:var(--gold-l);color:#8a6408}
+.ls-desc{font-size:13.5px;color:var(--ink2);line-height:1.56}
+.ls-out{margin-top:11px;font-size:12.5px;color:var(--ink3);display:flex;gap:8px;align-items:baseline}
+.ls-out b{color:var(--cofler);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;flex:none;text-transform:uppercase}
+
+/* SOURCES grid */
+.src-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+.src-card{background:var(--white);border:1px solid var(--line);border-radius:13px;padding:20px;border-top:3px solid var(--c,#1a56db)}
+.src-card .sc-n{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--ink4)}
+.src-card .sc-t{font-weight:600;font-size:15px;margin:8px 0 6px}
+.src-card .sc-proto{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--c,#1a56db);margin-bottom:9px}
+.src-card .sc-d{font-size:12.5px;color:var(--ink2);line-height:1.5}
+@media(max-width:760px){.src-grid{grid-template-columns:1fr}}
+
+/* LEVERS */
+.lever-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:30px}
+.lever-card{background:var(--white);border:1px solid var(--line);border-radius:13px;padding:20px 22px;position:relative;overflow:hidden}
+.lever-card::before{content:"";position:absolute;left:0;top:0;width:4px;height:100%;background:var(--c)}
+.lever-head{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+.lever-badge{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;flex:none}
+.lever-name{font-weight:600;font-size:15.5px}
+.lever-name small{display:block;font-weight:400;font-size:11px;color:var(--ink4);font-family:'IBM Plex Mono',monospace;letter-spacing:.04em}
+.lever-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.lever-list li{font-size:12.5px;color:var(--ink2);line-height:1.45;padding-left:16px;position:relative}
+.lever-list li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:1px;background:var(--c)}
+@media(max-width:760px){.lever-grid{grid-template-columns:1fr}}
+
+/* CXO views */
+.cxo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:30px}
+.cxo-card{background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.cxo-top{padding:18px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cxo-role{font-weight:700;font-size:16px;letter-spacing:.01em}
+.cxo-role small{display:block;font-weight:400;font-size:11px;opacity:.85;font-family:'IBM Plex Mono',monospace;letter-spacing:.03em;margin-top:2px}
+.cxo-metric{font-family:'Fraunces',serif;font-size:24px;font-weight:500;text-align:right;line-height:1}
+.cxo-metric small{display:block;font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:400;opacity:.85;margin-top:3px;letter-spacing:.02em}
+.cxo-body{padding:18px 20px}
+.cxo-sees{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.cxo-sees li{font-size:12.5px;color:var(--ink2);line-height:1.45;padding-left:17px;position:relative}
+.cxo-sees li::before{content:"▸";position:absolute;left:0;color:var(--ink4);font-size:11px}
+.cxo-action{font-size:12px;color:var(--ink3);border-top:1px solid var(--line2);padding-top:12px;line-height:1.5}
+.cxo-action b{color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:3px}
+@media(max-width:760px){.cxo-grid{grid-template-columns:1fr}}
+
+/* TIERS */
+.tier-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:30px}
+.tier-card{border-radius:13px;padding:18px 16px;color:#fff}
+.tier-card.t1{background:linear-gradient(155deg,#1a7a3c,#125e2c)}
+.tier-card.t2{background:linear-gradient(155deg,#b7620a,#8a4906)}
+.tier-card.t3{background:linear-gradient(155deg,#1a56db,#12357f)}
+.tier-card.t4{background:linear-gradient(155deg,#5e6678,#404758)}
+.tier-card .tc-tier{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;opacity:.85}
+.tier-card .tc-name{font-weight:700;font-size:16px;margin:5px 0 10px}
+.tier-card ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.tier-card li{font-size:11.5px;opacity:.94;line-height:1.4;padding-left:13px;position:relative}
+.tier-card li::before{content:"·";position:absolute;left:3px}
+@media(max-width:860px){.tier-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.tier-grid{grid-template-columns:1fr}}
+
+/* GATES table */
+.gates{margin-top:30px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--white)}
+.gate-row{display:grid;grid-template-columns:50px 1.1fr 1.6fr;gap:0;border-bottom:1px solid var(--line2)}
+.gate-row:last-child{border-bottom:none}
+.gate-row.head{background:var(--navy);color:#fff}
+.gate-row.head>div{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:13px 16px}
+.gate-row>div{padding:15px 16px;font-size:13px}
+.g-num{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:15px}
+.g-who{font-weight:600;color:var(--ink)}
+.g-who small{display:block;font-weight:400;color:var(--ink3);font-size:11.5px;margin-top:3px;font-family:'IBM Plex Sans'}
+.g-what{color:var(--ink2);line-height:1.5}
+@media(max-width:760px){.gate-row{grid-template-columns:40px 1fr}.g-what{grid-column:2;padding-top:0}}
+
+/* ENGINE applicability */
+.eng-map{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+.em-card{border-radius:14px;padding:20px;color:#fff}
+.em-card.cofler{background:linear-gradient(155deg,#0f6e56,#0a4636)}
+.em-card.flip{background:linear-gradient(155deg,#1a56db,#12357f)}
+.em-card.empath{background:linear-gradient(155deg,#7c3aed,#4f2199)}
+.em-card.fraud{background:linear-gradient(155deg,#c0392b,#7d241b)}
+.em-card .em-name{font-weight:700;font-size:18px;letter-spacing:.02em}
+.em-card .em-sub{font-size:11px;opacity:.85;font-family:'IBM Plex Mono',monospace;margin:4px 0 12px}
+.em-card .em-who{font-size:12.5px;line-height:1.5;opacity:.95}
+.em-card .em-who b{display:block;font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;opacity:.8;margin-bottom:3px;text-transform:uppercase}
+@media(max-width:860px){.eng-map{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.eng-map{grid-template-columns:1fr}}
+
+/* callout */
+.callout{margin-top:28px;background:var(--navy);color:#fff;border-radius:14px;padding:24px 26px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.callout .co-icon{width:46px;height:46px;border-radius:11px;background:rgba(123,220,192,.14);display:grid;place-items:center;font-size:22px;flex:none}
+.callout .co-text{font-size:14px;color:#cfd5e0;line-height:1.6}
+.callout .co-text b{color:#7bdcc0}
+
+/* data req box */
+.datareq{margin-top:24px;background:var(--cofler-l);border:1px solid #bce4d6;border-radius:13px;padding:20px 22px}
+.datareq .dr-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#0a5a45;margin-bottom:9px}
+.datareq .dr-text{font-size:13px;color:#0a4636;line-height:1.6}
+.datareq .dr-text b{font-weight:600}
+
+/* footer */
+.foot{background:var(--navy2);color:#8b92a3;padding:28px clamp(20px,5vw,64px);font-size:12px;border-top:1px solid rgba(255,255,255,.07)}
+.foot-in{max-width:980px;margin:0 auto;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center}
+.foot b{color:#cfd5e0}.foot .mono{color:#6f7689}
+
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.2,.7,.3,1),transform .6s cubic-bezier(.2,.7,.3,1)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.pulse{animation:none}}
+:focus-visible{outline:2px solid #7bdcc0;outline-offset:3px;border-radius:4px}
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle navigation">☰</button>
+
+<div class="shell">
+  <!-- SIDE NAV -->
+  <aside class="sidenav" id="sidenav">
+    <a class="sn-brand" href="#top">
+      <span class="sn-mark">PQ</span>
+      <span><b>PREDIQA</b><span>Hospital CXO Master</span></span>
+    </a>
+    <div class="sn-group">The Platform</div>
+    <a class="sn-link active" href="#top"><span class="dot" style="background:#7bdcc0"></span> Overview</a>
+    <a class="sn-link" href="#engines"><span class="dot" style="background:#5b9cff"></span> Four engines · who owns them</a>
+    <a class="sn-link" href="#architecture"><span class="dot" style="background:#3dd7a8"></span> Architecture</a>
+    <div class="sn-group">The Agentic Loop</div>
+    <a class="sn-link" href="#sources"><span class="dot" style="background:#1a56db"></span> Data ingestion</a>
+    <a class="sn-link" href="#levers"><span class="dot" style="background:#0f6e56"></span> Six lever signals</a>
+    <a class="sn-link" href="#loop"><span class="dot" style="background:#b7860a"></span> Loop · 7 stages</a>
+    <a class="sn-link" href="#tiers"><span class="dot" style="background:#1a7a3c"></span> Action authority tiers</a>
+    <div class="sn-group">Governance & Roles</div>
+    <a class="sn-link" href="#views"><span class="dot" style="background:#7c3aed"></span> What each CXO sees</a>
+    <a class="sn-link" href="#gates"><span class="dot" style="background:#c0392b"></span> 7 human gates</a>
+    <a class="sn-link" href="#onboarding"><span class="dot" style="background:#8b92a3"></span> Onboarding & data</a>
+  </aside>
+
+  <main class="main">
+    <header class="cxo-hero" id="top">
+      <div class="grid-bg"></div>
+      <div class="inner">
+        <div class="eyebrow"><span class="pulse"></span> Hospital CXO Master · Confidential · v1.0 · 2026</div>
+        <h1>PREDIQA sits <em>above</em> your systems — and never replaces them.</h1>
+        <p>A read-and-correlate intelligence layer over your existing EHR, billing, lab, pharmacy, HR, and payer feeds. Four engines run on one loop, with <b>seven human gates where your experts own every boundary.</b> This is the technical and governance reference for your leadership team.</p>
+        <div class="hero-meta">
+          <span class="meta-chip">Read-only · no rip-and-replace</span>
+          <span class="meta-chip">Epic · Cerner · Athenahealth · ABDM</span>
+          <span class="meta-chip">SOC 2 · HIPAA · GDPR · DPDPA</span>
+          <span class="meta-chip">7 human validation gates</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ENGINES / OWNERSHIP -->
+      <section class="block" id="engines">
+        <div class="b-eyebrow reveal">The four engines</div>
+        <h2 class="b-title reveal">One platform. Four engines. <em>A clear owner for each.</em></h2>
+        <p class="b-lead reveal">PREDIQA gives every part of your organization its own engine, feeding one shared intelligence loop. The leadership team sees the whole; each function gets depth in its own domain.</p>
+        <div class="eng-map">
+          <div class="em-card cofler reveal"><div class="em-name">COFLER</div><div class="em-sub">OVERSIGHT</div><div class="em-who"><b>Owner: C-Suite</b>Six-lever command intelligence. Live signals to leadership, what needs attention, and how one event impacts the others.</div></div>
+          <div class="em-card flip reveal"><div class="em-name">FLIP</div><div class="em-sub">PROVIDER · RCM</div><div class="em-who"><b>Owner: CFO / RCM</b>Matches clinical notes to codes and documentation, pre-submission. Stops denials before they ship.</div></div>
+          <div class="em-card empath reveal"><div class="em-name">EMPATHIFY</div><div class="em-sub">HUMAN SIGNAL</div><div class="em-who"><b>Owner: Quality / HR / CMO</b>The true journey of every human — patient, family, and staff. Live, passive, direct.</div></div>
+          <div class="em-card fraud reveal"><div class="em-name">FRAUDIQ</div><div class="em-sub">PAYER · INTEGRITY</div><div class="em-who"><b>Owner: Payer-facing</b>The mirror of FLIP. Forensic audit of incoming claims for payers and internal integrity review.</div></div>
+        </div>
+      </section>
+
+      <!-- ARCHITECTURE -->
+      <section class="block" id="architecture">
+        <div class="b-eyebrow reveal">Architecture</div>
+        <h2 class="b-title reveal">A correlate-layer, not a replacement.</h2>
+        <p class="b-lead reveal">PREDIQA continuously reads from your source systems via industry-standard protocols, normalizes everything into one unified data model, and makes it available to the engines. <b>It writes nothing back to your EHR.</b> Your systems stay; your vendors stay; your fee structures stay.</p>
+        <div class="callout reveal">
+          <div class="co-icon">🔒</div>
+          <div class="co-text">A secure, <b>read-only process.</b> Source systems are never modified. Every external communication requires a human dispatch token — this gate is absolute and cannot be bypassed by any configuration.</div>
+        </div>
+      </section>
+
+      <!-- SOURCES -->
+      <section class="block" id="sources">
+        <div class="b-eyebrow reveal">Loop · Stage 01</div>
+        <h2 class="b-title reveal">Six source categories enter the loop.</h2>
+        <p class="b-lead reveal">Each source has a dedicated connector microservice that fetches and forwards raw payloads — no transformation, just delivery. Everything lands in a Kafka staging queue with 30-day replay, then flows to the normalization engine.</p>
+        <div class="src-grid">
+          <div class="src-card reveal" style="--c:#1a56db"><div class="sc-n">SOURCE 1</div><div class="sc-t">EHR / EMR</div><div class="sc-proto">Epic FHIR R4 · Cerner SMART · Athenahealth</div><div class="sc-d">Discharge summaries, ADT events, LOS, order sets, vitals, attending assignments, clinical notes, care plans.</div></div>
+          <div class="src-card reveal" style="--c:#0f6e56"><div class="sc-n">SOURCE 2</div><div class="sc-t">RCM / Billing</div><div class="sc-proto">X12 EDI · 837P/I · 835</div><div class="sc-d">Claim status, denial codes, AR aging, package utilization, charge capture, pre-auth status.</div></div>
+          <div class="src-card reveal" style="--c:#7c3aed"><div class="sc-n">SOURCE 3</div><div class="sc-t">Lab / Pharmacy</div><div class="sc-proto">FHIR R4 · LIS/pharmacy REST</div><div class="sc-d">Test results, result trends, drug dispense records, inventory levels.</div></div>
+          <div class="src-card reveal" style="--c:#b7860a"><div class="sc-n">SOURCE 4</div><div class="sc-t">Payer APIs</div><div class="sc-proto">X12 270/271 · payer REST</div><div class="sc-d">Eligibility, prior auth, and denial reason codes from your top 8–10 payers per market.</div></div>
+          <div class="src-card reveal" style="--c:#c0392b"><div class="sc-n">SOURCE 5</div><div class="sc-t">HR / Operations</div><div class="sc-proto">CSV · REST · SFTP from HRIS</div><div class="sc-d">Staffing ratios, scheduling patterns, incident reports, credentialing and certification status.</div></div>
+          <div class="src-card reveal" style="--c:#5e6678"><div class="sc-n">SOURCE 6</div><div class="sc-t">External signals</div><div class="sc-proto">HCAHPS/CMS · epidemiology · CMMS</div><div class="sc-d">Quality feeds, outbreak alerts, seasonal trends, policy updates, device-uptime data.</div></div>
+        </div>
+        <div class="datareq reveal">
+          <div class="dr-label">Data required from you · ingestion</div>
+          <div class="dr-text"><b>EHR API credentials</b> (FHIR sandbox access), <b>RCM X12 feed access</b>, <b>payer API credentials</b> for top payers, <b>HR data export format</b>, and a <b>patient de-identification mapping table</b>. Plan for a 6–9 month integration timeline for Epic production credentials — budget accordingly.</div>
+        </div>
+      </section>
+
+      <!-- LEVERS -->
+      <section class="block" id="levers">
+        <div class="b-eyebrow reveal">Loop · Stage 02</div>
+        <h2 class="b-title reveal">Six lever emitters detect signals continuously.</h2>
+        <p class="b-lead reveal">Each emitter reads normalized data from its domain, applies detection rules, and emits typed JSON signals to a central bus. A signal is the atomic unit of intelligence — small, precise, richly annotated, with a severity weight from 1–100. Signals below 0.65 confidence are excluded from correlation.</p>
+        <div class="lever-grid">
+          <div class="lever-card reveal" style="--c:#0f6e56"><div class="lever-head"><span class="lever-badge" style="background:#0f6e56">C</span><span class="lever-name">Clinical<small>care quality & risk</small></span></div><ul class="lever-list"><li>LOS deviation &gt;1.5 SD from DRG-expected norm</li><li>Sepsis bundle compliance (CMS SEP-1 windows)</li><li>Deterioration trajectory from vitals trend</li><li>30-day readmission probability at discharge</li><li>Care-pathway adherence, top 50 DRGs</li></ul></div>
+          <div class="lever-card reveal" style="--c:#1a56db"><div class="lever-head"><span class="lever-badge" style="background:#1a56db">O</span><span class="lever-name">Operational<small>flow & capacity</small></span></div><ul class="lever-list"><li>Bed utilization and ICU occupancy trend</li><li>ED boarding hours breach detection</li><li>OR throughput and first-case start compliance</li><li>Discharge TAT deviation from baseline</li><li>Nurse-to-patient ratio vs. acuity mismatch</li></ul></div>
+          <div class="lever-card reveal" style="--c:#b7860a"><div class="lever-head"><span class="lever-badge" style="background:#b7860a">F</span><span class="lever-name">Financial<small>revenue integrity</small></span></div><ul class="lever-list"><li>Real-time denial rate by payer/DRG/attending</li><li>AR aging velocity & ML collectability</li><li>Charge-capture gap (ordered vs. billed)</li><li>Claim SLA breach risk — 48h warning</li><li>Revenue leakage per deficiency type</li></ul></div>
+          <div class="lever-card reveal" style="--c:#7c3aed"><div class="lever-head"><span class="lever-badge" style="background:#7c3aed">E</span><span class="lever-name">Empathy<small>human experience</small></span></div><ul class="lever-list"><li>Patient satisfaction micro-signals via EMPATHIFY</li><li>Care-team communication gap detection</li><li>Family-update compliance tracking</li><li>Advance-directive compliance, 4h routing</li><li>Staff sentiment from behavioral patterns</li></ul></div>
+          <div class="lever-card reveal" style="--c:#c0392b"><div class="lever-head"><span class="lever-badge" style="background:#c0392b">L</span><span class="lever-name">Legal<small>compliance & coding</small></span></div><ul class="lever-list"><li>Up-coding deviation vs. history & national norms</li><li>CPT unbundling against CMS NCCI edits</li><li>OIG Work Plan risk scoring</li><li>HIPAA anomaly detection (after-hours, bulk)</li><li>No-treating-relationship access flags</li></ul></div>
+          <div class="lever-card reveal" style="--c:#5e6678"><div class="lever-head"><span class="lever-badge" style="background:#5e6678">R</span><span class="lever-name">Resources<small>supply & assets</small></span></div><ul class="lever-list"><li>Medical device uptime & calibration (CMMS)</li><li>Pharmacy stock depletion forecasting</li><li>Consumable burn-rate anomalies</li><li>Staff certification & credentialing expiry</li><li>Critical supply-chain disruption signals</li></ul></div>
+        </div>
+      </section>
+
+      <!-- LOOP -->
+      <section class="block" id="loop">
+        <div class="b-eyebrow reveal">The complete loop</div>
+        <h2 class="b-title reveal">Seven stages, end to end.</h2>
+        <p class="b-lead reveal">From raw data to a tiered action and back into the learning model. Each stage is either fully automated (SYSTEM) or paused for your experts (HUMAN GATE). The system earns more autonomy only as accuracy is demonstrated.</p>
+        <div class="loop">
+          <div class="loop-stage reveal"><div class="ls-num" style="background:#1a56db">01</div><div class="ls-body"><div class="ls-head"><span class="ls-name">Ingestion</span><span class="ls-sys system">System + Gate 1</span></div><div class="ls-desc">Six source categories → Kafka staging → normalization into the unified PREDIQA data model. Patient de-duplication, terminology mapping (ICD-10, CPT-4, SNOMED, LOINC, RxNorm), provenance tagging.</div><div class="ls-out"><b>Output</b> Unified internal data model</div></div></div>
+          <div class="loop-stage reveal"><div class="ls-num" style="background:#0f6e56">02</div><div class="ls-body"><div class="ls-head"><span class="ls-name">Signal emission</span><span class="ls-sys system">System + Gate 2</span></div><div class="ls-desc">Six lever emitters run in parallel, applying detection rules and emitting typed JSON signals with severity weight and confidence to the central signal bus.</div><div class="ls-out"><b>Output</b> Typed signals, severity 1–100</div></div></div>
+          <div class="loop-stage reveal"><div class="ls-num" style="background:#7c3aed">03</div><div class="ls-body"><div class="ls-head"><span class="ls-name">Correlation</span><span class="ls-sys system">System + Gate 3</span></div><div class="ls-desc">A worker matches signals sharing an entity (unit, attending, payer, patient, DRG) within a 45-day window, then multiplies combined severity using proprietary amplifier weights.</div><div class="ls-out"><b>Output</b> Compound risk candidates</div></div></div>
+          <div class="loop-stage reveal"><div class="ls-num" style="background:#b7860a">04</div><div class="ls-body"><div class="ls-head"><span class="ls-name">Risk scoring</span><span class="ls-sys system">System + Gate 4</span></div><div class="ls-desc">compound_score = Σ(severity weights) × correlation amplifier. Classified Critical (80–100), High (60–79), Moderate (40–59), or Watch (1–39).</div><div class="ls-out"><b>Output</b> Score 1–100 + tier</div></div></div>
+          <div class="loop-stage reveal"><div class="ls-num" style="background:#c0392b">05</div><div class="ls-body"><div class="ls-head"><span class="ls-name">Decision engine</span><span class="ls-sys system">System + Gate 5</span></div><div class="ls-desc">The scored event is matched to your action_policy table, which you configure: for each signal type, lever combination, and risk tier, you specify which action tier is authorized.</div><div class="ls-out"><b>Output</b> Tiered action dispatch or hold</div></div></div>
+          <div class="loop-stage reveal"><div class="ls-num" style="background:#1a7a3c">06</div><div class="ls-body"><div class="ls-head"><span class="ls-name">Action</span><span class="ls-sys gate">System + Gate 6</span></div><div class="ls-desc">Tier 1 auto-executes; Tier 2 awaits one-click confirmation; Tier 3 notifies; Tier 4 logs. No external communication leaves without a human dispatch token.</div><div class="ls-out"><b>Output</b> Alert · draft · queue change · escalation</div></div></div>
+          <div class="loop-stage reveal"><div class="ls-num" style="background:#5e6678">07</div><div class="ls-body"><div class="ls-head"><span class="ls-name">Feedback & learning</span><span class="ls-sys gate">System + Gate 7</span></div><div class="ls-desc">Every approval and rejection at Gates 5 and 6 is logged as training data. Amplifier weights recalibrate monthly; the model retrains quarterly on de-identified cross-hospital data with dual CMIO + data-science sign-off.</div><div class="ls-out"><b>Output</b> Improved weights next cycle</div></div></div>
+        </div>
+      </section>
+
+      <!-- TIERS -->
+      <section class="block" id="tiers">
+        <div class="b-eyebrow reveal">Action authority</div>
+        <h2 class="b-title reveal">You decide what the system may do on its own.</h2>
+        <p class="b-lead reveal">Every action falls into one of four tiers. Expanding autonomy — moving an action from Tier 3 to Tier 2, or Tier 2 to Tier 1 — requires written sign-off from your CMIO or equivalent. <b>This is a governance decision, not a product setting.</b></p>
+        <div class="tier-grid">
+          <div class="tier-card t1 reveal"><div class="tc-tier">TIER 1</div><div class="tc-name">Auto-execute</div><ul><li>Push alerts to a role</li><li>Draft documents</li><li>Reorder billing queue</li><li>SLA countdown alerts</li><li>Bed & stock forecasts</li></ul></div>
+          <div class="tier-card t2 reveal"><div class="tc-tier">TIER 2</div><div class="tc-name">Confirm first</div><ul><li>Hold claim submission</li><li>Escalate to intensivist</li><li>Flag for compliance</li><li>Staff reallocation</li><li>Initiate prior auth</li></ul></div>
+          <div class="tier-card t3 reveal"><div class="tc-tier">TIER 3</div><div class="tc-name">Notify only</div><ul><li>Protocol-change ideas</li><li>Staffing policy flags</li><li>Executive risk reports</li><li>Payer-contract escalations</li><li>HCAHPS trend alerts</li></ul></div>
+          <div class="tier-card t4 reveal"><div class="tc-tier">TIER 4</div><div class="tc-name">Log only</div><ul><li>Watch-tier signals</li><li>Below-threshold events</li><li>Learning dataset entries</li><li>Human-rejection records</li><li>Outcome tracking</li></ul></div>
+        </div>
+      </section>
+
+      <!-- CXO VIEWS -->
+      <section class="block" id="views">
+        <div class="b-eyebrow reveal">One engine, six views</div>
+        <h2 class="b-title reveal">Each role sees the same risk, in <em>their</em> language.</h2>
+        <p class="b-lead reveal">PREDIQA produces one compound risk score. Every role sees a filtered, translated view — and the actions each is authorized to take.</p>
+        <div class="cxo-grid">
+          <div class="cxo-card reveal"><div class="cxo-top" style="background:linear-gradient(135deg,#16263f,#0b1422)"><div class="cxo-role">CEO<small>Command view</small></div><div class="cxo-metric">87<small>Critical</small></div></div><div class="cxo-body"><ul class="cxo-sees"><li>30-day risk-score trend</li><li>Peer-hospital benchmark comparison</li><li>Top 3 compound risk events active now</li><li>Auto-generated monthly executive summary</li></ul><div class="cxo-action"><b>Acts on</b> Initiates emergency review · delegates to CMO & CFO</div></div></div>
+          <div class="cxo-card reveal"><div class="cxo-top" style="background:linear-gradient(135deg,#b7860a,#8a6408)"><div class="cxo-role">CFO<small>Revenue integrity</small></div><div class="cxo-metric">₹18L<small>at risk</small></div></div><div class="cxo-body"><ul class="cxo-sees"><li>AR aging heat map with ML collectability</li><li>Denial rate by payer, DRG, attending</li><li>Charge-capture gap by department</li><li>5-day cash-flow forecast</li></ul><div class="cxo-action"><b>Acts on</b> Approves billing hold · releases corrected claims</div></div></div>
+          <div class="cxo-card reveal"><div class="cxo-top" style="background:linear-gradient(135deg,#0f6e56,#0a4636)"><div class="cxo-role">CMO / CMIO<small>Clinical quality</small></div><div class="cxo-metric">91%<small>SEP-1</small></div></div><div class="cxo-body"><ul class="cxo-sees"><li>LOS heat map by unit & attending</li><li>Readmission risk scores at discharge</li><li>Documentation completeness scorecard</li><li>Deterioration alerts — live patient list</li></ul><div class="cxo-action"><b>Acts on</b> Confirms escalation · adjusts thresholds · signs model promotions</div></div></div>
+          <div class="cxo-card reveal"><div class="cxo-top" style="background:linear-gradient(135deg,#c0392b,#7d241b)"><div class="cxo-role">Compliance<small>Legal & coding</small></div><div class="cxo-metric">3<small>OIG flags</small></div></div><div class="cxo-body"><ul class="cxo-sees"><li>OIG risk score with Work Plan mapping</li><li>Up-coding deviation alerts with evidence</li><li>HIPAA audit anomaly log</li><li>Corrective-action-plan tracker</li></ul><div class="cxo-action"><b>Acts on</b> Confirms review · approves record hold · files CAP</div></div></div>
+          <div class="cxo-card reveal"><div class="cxo-top" style="background:linear-gradient(135deg,#1a56db,#12357f)"><div class="cxo-role">Billing team<small>Claims desk</small></div><div class="cxo-metric">6<small>held</small></div></div><div class="cxo-body"><ul class="cxo-sees"><li>Denial queue with priority ranking</li><li>SLA countdown per payer deadline</li><li>Missing-document upload prompts</li><li>Draft query replies awaiting sign-off</li></ul><div class="cxo-action"><b>Acts on</b> Uploads docs · edits draft · releases claim</div></div></div>
+          <div class="cxo-card reveal"><div class="cxo-top" style="background:linear-gradient(135deg,#7c3aed,#4f2199)"><div class="cxo-role">Charge nurse / Ops<small>Flow control</small></div><div class="cxo-metric">42<small>pending</small></div></div><div class="cxo-body"><ul class="cxo-sees"><li>Bed availability — 4h & 12h forecast</li><li>Discharge queue by note completion</li><li>Staff ratio vs. acuity, unit by unit</li><li>ED boarding-hours alert</li></ul><div class="cxo-action"><b>Acts on</b> Confirms reallocation · prioritizes discharge · escalates bed crisis</div></div></div>
+        </div>
+      </section>
+
+      <!-- GATES -->
+      <section class="block" id="gates">
+        <div class="b-eyebrow reveal">Human ownership</div>
+        <h2 class="b-title reveal">Seven gates. Your experts own the boundaries.</h2>
+        <p class="b-lead reveal">PREDIQA operates within limits your people set. These are the seven points where expert input is mandatory — the system provides evidence of accuracy; your institution decides the boundary.</p>
+        <div class="gates">
+          <div class="gate-row head"><div>Gate</div><div>Who</div><div>What they own</div></div>
+          <div class="gate-row reveal"><div class="g-num">1</div><div class="g-who">IT / Data engineering<small>Data quality review</small></div><div class="g-what">Confirms connector health, reviews the dead-letter queue, approves new data-source onboarding, validates terminology mapping.</div></div>
+          <div class="gate-row reveal"><div class="g-num">2</div><div class="g-who">CMO / CMIO<small>Signal config</small></div><div class="g-what">Sets severity thresholds per signal type, approves new signal types, signs off on changes to clinical detection rules. Quarterly.</div></div>
+          <div class="gate-row reveal"><div class="g-num">3</div><div class="g-who">Revenue cycle + Clinical informatics<small>Reference data</small></div><div class="g-what">Loads payer prior-auth matrices, DRG/LOS benchmarks, denial-pattern libraries, insurance rate schedules. A quarterly operational task.</div></div>
+          <div class="gate-row reveal"><div class="g-num">4</div><div class="g-who">Clinical + Financial leads<small>Score validation</small></div><div class="g-what">Reviews compound scores, marks false positives with a reason code, adjusts institution sensitivity. Feeds the quarterly recalibration.</div></div>
+          <div class="gate-row reveal"><div class="g-num">5</div><div class="g-who">Role-specific staff<small>Tier 2 confirmation</small></div><div class="g-what">One-click approval of consequential actions with a 10-minute TTL. Unconfirmed actions escalate to the department head.</div></div>
+          <div class="gate-row reveal"><div class="g-num">6</div><div class="g-who">Billing / clinical staff<small>Dispatch approval</small></div><div class="g-what">No external communication leaves without a human dispatch token. Reviewed, edited, and signed before dispatch. This gate is absolute.</div></div>
+          <div class="gate-row reveal"><div class="g-num">7</div><div class="g-who">CMIO + Data science lead<small>Model governance</small></div><div class="g-what">Dual written sign-off on every retrain and amplifier-weight change. CMIO holds veto power over any model promotion. Versions stored in MLflow.</div></div>
+        </div>
+      </section>
+
+      <!-- ONBOARDING -->
+      <section class="block" id="onboarding">
+        <div class="b-eyebrow reveal">Getting started</div>
+        <h2 class="b-title reveal">What we need from you, and what to expect.</h2>
+        <p class="b-lead reveal">PREDIQA calibrates to your institution's specific risk tolerance and clinical culture over 12–18 months. The faster reference data and credentials arrive, the faster the loop earns autonomy.</p>
+        <div class="datareq reveal">
+          <div class="dr-label">Onboarding data checklist</div>
+          <div class="dr-text">
+            <b>Integration:</b> EHR API credentials (FHIR sandbox → production), RCM X12 feed access, payer API keys, HRIS export format, patient de-identification mapping table.<br><br>
+            <b>Clinical baselines (Gate 2):</b> Historical LOS distribution by DRG, baseline sepsis compliance, documentation completeness average, HCAHPS baselines, historical denial rate by payer.<br><br>
+            <b>Reference data (Gate 3):</b> Payer prior-auth matrices, DRG-expected LOS norms, denial-pattern library, insurance rate schedules, plus auto-updated CMS NCCI edits and OIG Work Plan priorities.<br><br>
+            <b>Governance:</b> action_policy sign-off from CMIO (clinical), CFO (financial), and Chief Compliance Officer (legal) before the decision engine goes live.
+          </div>
+        </div>
+        <div class="callout reveal" style="margin-top:20px">
+          <div class="co-icon">⏱️</div>
+          <div class="co-text"><b>Timeline reality:</b> budget 6–9 months for Epic production credentials. The continuous learning loop reaches institutional calibration over 12–18 months — human rejections at Gates 5 and 6 are the most valuable signal, teaching the system what your institution considers acceptable.</div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="foot">
+      <div class="foot-in">
+        <div><b>PREDIQA</b> — Hospital CXO Master &nbsp;·&nbsp; COFLER · FLIP · EMPATHIFY · FRAUDIQ</div>
+        <div class="mono">Confidential — Authorized technical & executive review only · v1.0 · 2026</div>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function(){
+  // reveal
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.1,rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+  // mobile menu
+  var nav=document.getElementById('sidenav'), btn=document.getElementById('menuBtn');
+  btn.addEventListener('click',function(){ nav.classList.toggle('open'); });
+  nav.addEventListener('click',function(e){ if(e.target.closest('.sn-link')) nav.classList.remove('open'); });
+
+  // active link on scroll
+  var links=[].slice.call(document.querySelectorAll('.sn-link'));
+  var secs=links.map(function(l){ var id=l.getAttribute('href').slice(1); return document.getElementById(id); });
+  var so=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        var id=e.target.id;
+        links.forEach(function(l){ l.classList.toggle('active', l.getAttribute('href')==='#'+id); });
+      }
+    });
+  },{rootMargin:'-20% 0px -70% 0px'});
+  secs.forEach(function(s){ if(s) so.observe(s); });
+})();
+</script>
+</body>
+</html>
